@@ -1,0 +1,261 @@
+[bot]
+language = "ru"
+exchange = "bybit"
+base_coin = "RVN, XTZ, RUNE, ORDI"
+quote_coin = "USDT"
+leverage = "8"
+margin_mode = "cross"
+percent_or_amount = true
+depo = 50.0
+bo_amount = 33.0
+first_step = 0.0
+lift_step = 0.2
+range_cover = 4.0
+orders_total = 2
+active_orders = 0
+first_so_coeff = 1.15
+dynamic_so_coeff = 1.35
+martingale = 2.0
+time_sleep = 180
+time_sleep_coeff = 2
+cancel_on_trend = false
+so_safety_price = 0.1
+new_order_time = 120
+emergency_averaging = 15
+use_margin = false
+margin_top = 1.124
+margin_bottom = 0.22
+back_profit = 1.1
+stop_if_no_balance = false
+my_note = "server_bot_1"
+
+[entry]
+entry_by_indicators = true
+entry_use_tv_signals = false
+entry_use_ema = false
+entry_use_entry_margin = false
+entry_margin_top = 2.2
+entry_margin_bottom = 0.22
+entry_timeframe = "1h"
+entry_preset = "CCI_CROSS"
+
+[entry_preset_price]
+price_delta_short = 4.0
+price_delta_long = 3.5
+
+[entry_preset_stoch_cci]
+use_stoch = true
+use_cci = false
+basic_indicator = "stoch"
+stoch_short_up_level = 100
+stoch_short_low_level = 90
+stoch_long_up_level = 26
+stoch_long_low_level = 0
+cci_short_level = 50
+cci_long_level = -50
+
+[entry_preset_stoch_rsi]
+use_stoch = false
+use_rsi = true
+basic_indicator = "rsi"
+stoch_short_up_level = 100
+stoch_short_low_level = 68
+stoch_long_up_level = 36
+stoch_long_low_level = 0
+rsi_short_level = 55
+rsi_long_level = 50
+
+[entry_preset_cci_cross]
+cci_short_level = 50
+cci_long_level = -50
+use_price = false
+cross_method = "crossover"
+
+[entry_preset_ma_cross]
+ma1_length = 25
+ma2_length = 50
+
+[entry_preset_rsi_smarsi_cross]
+rsi_long_up_level = 40
+rsi_long_low_level = 0
+rsi_short_up_level = 100
+rsi_short_low_level = 64
+smarsi_length = 3
+
+[averaging]
+timeframe = "1h, 2h, 4h"
+avg_timesleep = 15
+avg_preset = "PRICE"
+
+[avg_preset_price]
+price_delta_short = 8.0
+price_delta_long = 10.5
+
+[avg_preset_stoch_cci]
+use_stoch = true
+use_cci = false
+basic_indicator = "stoch"
+stoch_short_up_level = 100
+stoch_short_low_level = 77
+stoch_long_up_level = 30
+stoch_long_low_level = 0
+cci_short_level = 80
+cci_long_level = -50
+use_price = true
+
+[avg_preset_stoch_rsi]
+use_stoch = true
+use_rsi = true
+basic_indicator = "rsi"
+stoch_short_up_level = 100
+stoch_short_low_level = 72
+stoch_long_up_level = 28
+stoch_long_low_level = 0
+rsi_short_level = 65
+rsi_long_level = 48
+
+[avg_preset_cci_cross]
+cci_short_level = 78
+cci_long_level = -50
+use_price = true
+cross_method = "crossover"
+
+[avg_preset_ma_cross]
+ma1_length = 25
+ma2_length = 50
+cross_method = "crossover"
+
+[avg_preset_rsi_smarsi_cross]
+rsi_long_up_level = 30
+rsi_long_low_level = 0
+rsi_short_up_level = 100
+rsi_short_low_level = 73
+smarsi_length = 2
+
+[timeframe_switching]
+timeframe_switching = true
+ema_global_switch = false
+orders_switch = false
+orders_count = 2
+last_candle_switch = false
+last_candle_count = 10
+last_candle_orders = 2
+stoch_adjustment = 5
+
+[exit]
+take_profit = "indicators_exit"
+squeeze_profit = 4.2
+trailing_stop = 0.4
+limit_stop = 0.3
+exit_timeframe = "15m"
+exit_use_tv_signals = false
+exit_profit_level = 1.2
+exit_stop_loss_level = 2.2
+exit_preset = "STOCH_CCI"
+
+[exit_preset_stoch_cci]
+use_stoch = true
+use_cci = true
+basic_indicator = "cci"
+stoch_short_up_level = 40
+stoch_short_low_level = 0
+stoch_long_up_level = 100
+stoch_long_low_level = 60
+cci_short_level = -100
+cci_long_level = 100
+
+[exit_preset_stoch_rsi]
+use_stoch = true
+use_rsi = true
+basic_indicator = "rsi"
+stoch_short_up_level = 40
+stoch_short_low_level = 0
+stoch_long_up_level = 100
+stoch_long_low_level = 60
+rsi_short_level = 40
+rsi_long_level = 70
+
+[exit_preset_cci_cross]
+cci_short_level = -50
+cci_long_level = 50
+use_price = true
+cross_method = "crossover"
+
+[exit_preset_ma_cross]
+ma1_length = 25
+ma2_length = 50
+cross_method = "crossover"
+
+[exit_preset_rsi_smarsi_cross]
+rsi_long_up_level = 28
+rsi_long_low_level = 0
+rsi_short_up_level = 100
+rsi_short_low_level = 72
+smarsi_length = 2
+
+[indicators_tuning]
+global_timeframe = "1h"
+use_stoch_rsi = false
+ema200_length = 200
+ema200_delta = 5
+use_global_stoch = true
+global_stoch_long_up_level = 35
+global_stoch_long_low_level = 0
+global_stoch_short_up_level = 100
+global_stoch_short_low_level = 78
+stoch_fastk_period = 14
+stoch_slowk_period = 4
+stoch_slowd_period = 3
+cci_length = 7
+rsi_length = 14
+rsi_sma_length = 3
+macd_f = 12
+macd_s = 26
+macd_signal = 9
+bb_period = 20
+bb_dev = 2
+atr_length = 13
+efi_length = 13
+extremes_left = 4
+extremes_right = 3
+
+[whitelist]
+use_whitelist = true
+whitelist = ""
+
+[logging]
+write_to_file = true
+
+[telegram]
+use_telegram = true
+only_for_fixes = false
+api_token = "5801868747:AAF7c0QA6TQMrdcn7AUkL7QWbSyZPrdKlqQ"
+chat_id = "396071160"
+
+[telegram_signals]
+use_signals = false
+api_token = "562732322:AAGHqITscLwSbyW1jG1FgqEYvx5CeB2JEzs"
+chat_id = "396071160"
+
+[mail]
+email = "assa79assa@gmail.com"
+app_password = "ehvgbgqlxbdkmxcy"
+imap_server = "imap.gmail.com"
+imap_port = "993"
+
+[binance]
+api_key = "6AReAh8UGVh2XO8JqDdrADql7ZYUJamuxmtRbkKD97IbytKL9XbfaEkuKzCivsk8"
+api_secret = "YjQGI7zWXswtLCUSfUajkG4YRt4k7TJBplXMAshm9yNnPus8lSMVVPYQOil5REDz"
+
+[bybit]
+api_key = "YV4zX4UmK32liUFfn3"
+api_secret = "Ncvw77lEOExOm6Gh9F8tryBx7b4REeCroTKV"
+
+[okx]
+api_key = "e2f6e2c7-e9a6-46cf-a390-44207467ec1d"
+api_secret = "96196DB3234FF0A7617BF1054C99786D"
+password = "0120455kK!"
+
+[bingx]
+api_key = "KqTfzzy5nLjCmQrYSDUP7CtVDuTJtIU7b19Gics7ETSEdjkmaZfqpnKCp6cjd8aHffz7zeyQmhkmVFYiTCYog"
+api_secret = "gOo89PiBy3xDtWyDm08eQRa6kZqucM4iJQUrPCDkptUquReb5b8JwkFoqTYbNn4s7mXovY0YHtOMCBcUQ"

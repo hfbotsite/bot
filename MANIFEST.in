@@ -1,0 +1,4 @@
+include icon.ico
+include README.md
+include config.toml
+recursive-include hfbot *.py
