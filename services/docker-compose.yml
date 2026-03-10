@@ -1,0 +1,98 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: bot_platform
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: bot
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_bot_platform:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot -d bot_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  public-api:
+    image: python:3.12-slim
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ORCHESTRATOR_BASE_URL: http://orchestrator:8002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "pip install -r services/requirements.txt &&
+             uvicorn services.public_api.app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8010:8000"
+
+  internal-api:
+    image: python:3.12-slim
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "pip install -r services/requirements.txt &&
+             uvicorn services.internal_api.app.main:app --host 0.0.0.0 --port 8001"
+    ports:
+      - "8011:8001"
+
+  bot-runtime:
+    image: python:3.12-slim
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ..:/app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "pip install -r services/requirements.txt &&
+             python -m services.bot_runtime"
+    restart: unless-stopped
+
+  orchestrator:
+    image: python:3.12-slim
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - ..:/app
+      - bot_configs:/srv/bots
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BOT_CONFIG_ROOT: /srv/bots
+      BOT_IMAGE_REPO: bot-runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "pip install -r services/requirements.txt &&
+             uvicorn services.orchestrator.app.main:app --host 0.0.0.0 --port 8002"
+    ports:
+      - "8012:8002"
+
+volumes:
+  pgdata_bot_platform:
+  bot_configs:

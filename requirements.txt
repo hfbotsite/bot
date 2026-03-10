@@ -1,1 +1,0 @@
-cryptography scipy pandas sqlalchemy ccxt=4.4.31 pytoml==0.1.21 cfscrape==1.9.5 psutil pyinstaller==4.4

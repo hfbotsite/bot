@@ -1,0 +1,246 @@
+{
+  "bot": {
+    "exchange": "bybit",
+    "market": "futures",
+    "base_coin": "BTC",
+    "quote_coin": "USDT",
+    "leverage": 10,
+    "margin_mode": "isolated",
+    "time_sleep": 2,
+    "time_sleep_coeff": 1,
+    "stop_if_no_balance": false,
+    "cancel_on_trend": false,
+    "so_safety_price": "0.5",
+    "new_order_time": 60,
+    "emergency_averaging": 0,
+    "use_margin": false,
+    "margin_top": "0",
+    "margin_bottom": "0",
+    "back_profit": "0"
+  },
+  "basic": {
+    "depo": "100",
+    "percent_or_amount": false,
+    "bo_amount": "10",
+    "orders_total": 10,
+    "active_orders": 0
+  },
+  "grid": {
+    "first_step": "0.5",
+    "lift_step": "0.25",
+    "range_cover": 10,
+    "first_so_coeff": "1.0",
+    "dynamic_so_coeff": "1.0",
+    "martingale": "1.2"
+  },
+  "entry": {
+    "entry_by_indicators": true,
+    "entry_use_tv_signals": false,
+    "entry_use_ema": false,
+    "entry_use_entry_margin": false,
+    "entry_margin_top": "2.2",
+    "entry_margin_bottom": "0.22",
+    "entry_timeframe": "1h",
+    "entry_preset": "MA_CROSS",
+    "stoch_cci": {
+      "use_stoch": true,
+      "use_cci": false,
+      "basic_indicator": "stoch",
+      "stoch_short_up_level": "100",
+      "stoch_short_low_level": "90",
+      "stoch_long_up_level": "26",
+      "stoch_long_low_level": "0",
+      "cci_short_level": "50",
+      "cci_long_level": "-50",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "cci_period": 10
+    },
+    "stoch_rsi": {
+      "use_stoch": false,
+      "use_rsi": true,
+      "basic_indicator": "rsi",
+      "stoch_short_up_level": "100",
+      "stoch_short_low_level": "68",
+      "stoch_long_up_level": "36",
+      "stoch_long_low_level": "0",
+      "rsi_short_level": "55",
+      "rsi_long_level": "50",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "rsi_period": 14
+    },
+    "cci_cross": {
+      "cci_short_level": "50",
+      "cci_long_level": "-50",
+      "use_price": false,
+      "cci_period": 10
+    },
+    "ma_cross": {
+      "ma1_length": 25,
+      "ma2_length": 52
+    },
+    "price": {
+      "price_delta_short": "4",
+      "price_delta_long": "3.5"
+    },
+    "rsi_smarsi_cross": {
+      "rsi_short_up_level": "100",
+      "rsi_short_low_level": "64",
+      "rsi_long_up_level": "40",
+      "rsi_long_low_level": "0",
+      "smarsi_length": 3,
+      "rsi_period": 14
+    }
+  },
+  "averaging": {
+    "enabled": true,
+    "timeframe": "1h",
+    "avg_timesleep": 15,
+    "avg_preset": "STOCH_CCI",
+    "stoch_cci": {
+      "use_stoch": true,
+      "use_cci": false,
+      "basic_indicator": "stoch",
+      "stoch_short_up_level": "100",
+      "stoch_short_low_level": "77",
+      "stoch_long_up_level": "35",
+      "stoch_long_low_level": "0",
+      "cci_short_level": "50",
+      "cci_long_level": "-50",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "cci_period": 10
+    },
+    "stoch_rsi": {
+      "use_stoch": true,
+      "use_rsi": true,
+      "basic_indicator": "rsi",
+      "stoch_short_up_level": "100",
+      "stoch_short_low_level": "72",
+      "stoch_long_up_level": "28",
+      "stoch_long_low_level": "0",
+      "rsi_short_level": "65",
+      "rsi_long_level": "48",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "rsi_period": 14
+    },
+    "cci_cross": {
+      "cci_short_level": "78",
+      "cci_long_level": "-50",
+      "use_price": true,
+      "cci_period": 10
+    },
+    "ma_cross": {
+      "ma1_length": 25,
+      "ma2_length": 50
+    },
+    "price": {
+      "price_delta_short": "8",
+      "price_delta_long": "10.5"
+    },
+    "rsi_smarsi_cross": {
+      "rsi_short_up_level": "100",
+      "rsi_short_low_level": "73",
+      "rsi_long_up_level": "30",
+      "rsi_long_low_level": "0",
+      "smarsi_length": 2,
+      "rsi_period": 14
+    }
+  },
+  "exit": {
+    "take_profit": "profit_exit",
+    "squeeze_profit": "2",
+    "trailing_stop": "0.32",
+    "limit_stop": "50",
+    "exit_timeframe": "1h",
+    "exit_use_tv_signals": false,
+    "exit_profit_level": "1",
+    "exit_stop_loss_level": "50",
+    "exit_preset": "STOCH_CCI",
+    "stoch_cci": {
+      "use_stoch": true,
+      "use_cci": true,
+      "basic_indicator": "stoch",
+      "stoch_short_up_level": "40",
+      "stoch_short_low_level": "0",
+      "stoch_long_up_level": "100",
+      "stoch_long_low_level": "60",
+      "cci_short_level": "-100",
+      "cci_long_level": "100",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "cci_period": 10
+    },
+    "stoch_rsi": {
+      "use_stoch": true,
+      "use_rsi": true,
+      "basic_indicator": "rsi",
+      "stoch_short_up_level": "40",
+      "stoch_short_low_level": "0",
+      "stoch_long_up_level": "100",
+      "stoch_long_low_level": "60",
+      "rsi_short_level": "40",
+      "rsi_long_level": "70",
+      "stoch_fastk_period": 14,
+      "stoch_slowk_period": 3,
+      "stoch_slowd_period": 3,
+      "rsi_period": 14
+    },
+    "cci_cross": {
+      "cci_short_level": "-50",
+      "cci_long_level": "50",
+      "use_price": true,
+      "cci_period": 10
+    },
+    "ma_cross": {
+      "ma1_length": 25,
+      "ma2_length": 50
+    },
+    "rsi_smarsi_cross": {
+      "rsi_short_up_level": "100",
+      "rsi_short_low_level": "72",
+      "rsi_long_up_level": "28",
+      "rsi_long_low_level": "0",
+      "smarsi_length": 2,
+      "rsi_period": 14
+    }
+  },
+  "indicators_tuning": {
+    "global_timeframe": "1h",
+    "use_stoch_rsi": false,
+    "use_ema200": false,
+    "ema200_length": 200,
+    "ema200_delta": "0",
+    "use_global_stoch": false,
+    "global_stoch_long_up_level": "80",
+    "global_stoch_long_low_level": "20",
+    "global_stoch_short_up_level": "80",
+    "global_stoch_short_low_level": "20",
+    "macd_f": 12,
+    "macd_s": 26,
+    "macd_signal": 9,
+    "bb_period": 20,
+    "bb_dev": "2",
+    "atr_length": 14,
+    "efi_length": 13,
+    "extremes_left": 5,
+    "extremes_right": 5
+  },
+  "timeframe_switching": {
+    "timeframe_switching": false,
+    "ema_global_switch": false,
+    "orders_switch": false,
+    "orders_count": 0,
+    "last_candle_switch": false,
+    "last_candle_count": 0,
+    "last_candle_orders": 0,
+    "stoch_adjustment": "0"
+  }
+}

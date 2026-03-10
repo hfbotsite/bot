@@ -145,8 +145,6 @@ stoch_adjustment = 5
 [exit]
 take_profit = "indicators_exit"
 squeeze_profit = 4.2
-trailing_stop = 0.4
-limit_stop = 0.3
 exit_timeframe = "15m"
 exit_use_tv_signals = false
 exit_profit_level = 1.2

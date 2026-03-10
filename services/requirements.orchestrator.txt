@@ -1,0 +1,20 @@
+# Orchestrator/API dependencies (container manager + HTTP API).
+# This file is intentionally separate from runtime deps.
+
+# API
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# Data validation / schemas
+pydantic>=2.7
+
+# Orchestrator talks to docker daemon
+docker>=7.1
+
+# Used by tools/smoke clients and internal HTTP calls
+httpx>=0.27
+
+# Optional helpers
+python-multipart>=0.0.9
+orjson>=3.10
+structlog>=24.1
