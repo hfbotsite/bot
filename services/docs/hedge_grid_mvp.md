@@ -95,6 +95,61 @@
   - что нет утечек aiohttp/ccxt resources
   - что стратегия/математика компилируются и могут быть вызваны
 
+## Переключение таймфрейма для усреднения (MVP)
+
+### Цель
+В режиме усреднения (когда есть открытая позиция) бот может переключать таймфрейм, на котором считается **сигнал `averaging`** (и, следовательно, разрешение на выставление market-усреднения в `AveragingCoordinator`).
+
+Важно:
+- это **не UI-переключатель**, а часть торговой логики runtime
+- вход (`entry`) и выход (`exit`) в этом MVP **не переключаются**, изменяется только TF для `averaging`-сигнала
+
+### Конфигурация
+Цепочка таймфреймов задаётся в `averaging.timeframe` как строка через запятую:
+
+```json
+"averaging": {
+  "enabled": true,
+  "timeframe": "5m, 15m, 1h, 4h",
+  ...
+}
+```
+
+- первый элемент цепочки — **base timeframe**
+- в runtime свечи прогреваются/стримятся для всех таймфреймов из цепочки (см. `BotSettings.working_timeframes`)
+
+Включение логики переключения:
+- `timeframe_switching.timeframe_switching = true`
+- `timeframe_switching.ema_global_switch = true`
+
+Триггерный таймфрейм EMA:
+- берётся из `indicators_tuning.global_timeframe` (например `1h`)
+
+### Триггер (EMA200 cross на global timeframe)
+Реализован EMA200 cross по close на `indicators_tuning.global_timeframe`:
+
+- для LONG: `close` пересёк EMA200 **сверху вниз** → шаг вверх по цепочке
+- для SHORT: `close` пересёк EMA200 **снизу вверх** → шаг вверх по цепочке
+
+Примечание: в MVP используется один “active averaging tf” на весь бот. Если произошёл любой из двух кроссов (down или up), выполняется step-up.
+
+### Ограничение: переключение только при наличии позиции
+Переключение разрешено только если у бота есть открытая позиция (LONG или SHORT):
+- если позиция отсутствует (FLAT) → активный TF сбрасывается на base timeframe
+- если позиция есть → разрешён step-up по EMA-cross
+
+### Где реализовано
+- `services/bot_runtime/timeframe_switcher.py` — логика цепочки + EMA200 cross
+- `services/bot_runtime/settings.py` — парсинг `averaging.timeframe` как списка (CSV) и включение всех TF цепочки в `working_timeframes`
+- `services/bot_runtime/runtime.py`
+  - определение `has_position` (по position snapshots)
+  - пересчёт `averaging`-сигнала на текущем active TF через “settings view” (подмена только `averaging.timeframe`)
+
+### Что НЕ реализовано в этом MVP
+- `orders_switch`, `last_candle_switch` и связанные параметры
+- cooldown/revert политика (кроме reset на base при FLAT)
+- разные active TF для LONG и SHORT (нужна переработка `SignalStore` под ключ `(symbol, position_side, event)`)
+
 ## Unification layer: Transport + ExchangeAdapter (CCXT)
 
 ### Зачем

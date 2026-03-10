@@ -37,7 +37,8 @@ from services.bot_engine.deals_repo import DealsRepo
 from services.bot_engine.exit_tracker import ExitTracker
 from services.bot_engine.dynamic_averaging import AveragingConfig, AveragingCoordinator
 
-from .settings import BotSettings
+from .settings import BotSettings, _first_timeframe, _parse_timeframes
+from .timeframe_switcher import TimeframeSwitcher
 
 
 logger = logging.getLogger("bot_runtime")
@@ -204,13 +205,27 @@ class BotRuntime:
 
         signals = SignalStore()
 
+        # Timeframe switching (MVP): averaging.timeframe may be a comma-separated chain.
+        avg_chain = _parse_timeframes(self._settings.averaging.timeframe) if self._settings.averaging.enabled else []
+        if not avg_chain:
+            avg_chain = [_first_timeframe(self._settings.averaging.timeframe)] if self._settings.averaging.enabled else []
+        tf_switcher = TimeframeSwitcher(chain=avg_chain, ema_length=int(self._settings.indicators_tuning.ema200_length))
+        tf_active_averaging_tf = tf_switcher.base_tf
+        tf_has_position = False
+
         self._tasks.append(asyncio.create_task(self._ws_ingest(ws=ws, store=candle_store, tf_states=tf_states)))
         self._tasks.append(asyncio.create_task(self._rest_candles_fallback_loop(store=candle_store, tf_states=tf_states), name="rest_candles_fallback"))
         self._tasks.append(asyncio.create_task(self._warmup_gate(store=candle_store, tf_states=tf_states)))
         self._tasks.append(asyncio.create_task(indicators.run(), name="indicators"))
         self._tasks.append(
             asyncio.create_task(
-                self._signals_loop(store=candle_store, signals=signals),
+                self._signals_loop(
+                    store=candle_store,
+                    signals=signals,
+                    timeframe_switcher=tf_switcher,
+                    active_averaging_tf_ref=lambda: tf_active_averaging_tf,
+                    has_position_ref=lambda: tf_has_position,
+                ),
                 name="signals",
             )
         )
@@ -226,11 +241,26 @@ class BotRuntime:
             self._tasks.append(asyncio.create_task(self._fills_ingest_loop(run_id=run_id), name="fills_ingest"))
         self._tasks.append(
             asyncio.create_task(
-                self._strategy_loop(run_id=run_id, price_feed=price_feed, signals=signals),
+                self._strategy_loop(
+                    run_id=run_id,
+                    price_feed=price_feed,
+                    signals=signals,
+                    timeframe_switcher=tf_switcher,
+                    set_active_averaging_tf=lambda tf: _set_tf(tf),
+                    set_has_position=lambda hp: _set_has_position(hp),
+                ),
                 name="strategy",
             )
         )
         self._tasks.append(asyncio.create_task(self._heartbeat_loop(), name="heartbeat"))
+
+        def _set_tf(tf: str) -> None:
+            nonlocal tf_active_averaging_tf
+            tf_active_averaging_tf = tf
+
+        def _set_has_position(hp: bool) -> None:
+            nonlocal tf_has_position
+            tf_has_position = hp
 
         self._status = RuntimeStatus(phase="running", ts=datetime.now(timezone.utc))
 
@@ -500,16 +530,104 @@ class BotRuntime:
         finally:
             await transport.close()
 
-    async def _signals_loop(self, *, store: CandleStore, signals: SignalStore) -> None:
+    async def _signals_loop(
+        self,
+        *,
+        store: CandleStore,
+        signals: SignalStore,
+        timeframe_switcher: TimeframeSwitcher,
+        active_averaging_tf_ref,
+        has_position_ref,
+    ) -> None:
         # Recompute latest signals periodically (cheap), based on current CandleStore.
         while True:
             try:
-                recompute_all(self._settings, store, signals, symbol=self._settings.symbol)
+                # Build a lightweight settings view that only overrides averaging timeframe.
+                active_tf = active_averaging_tf_ref()
+                if self._settings.averaging.enabled:
+                    # keep entry/exit unchanged; only averaging signal is switched
+                    base_settings = self._settings
+
+                    class _AveragingView:
+                        enabled = base_settings.averaging.enabled
+                        timeframe = active_tf
+                        avg_timesleep = base_settings.averaging.avg_timesleep
+                        avg_preset = base_settings.averaging.avg_preset
+                        stoch_cci = base_settings.averaging.stoch_cci
+                        stoch_rsi = base_settings.averaging.stoch_rsi
+                        cci_cross = base_settings.averaging.cci_cross
+                        ma_cross = base_settings.averaging.ma_cross
+                        price = base_settings.averaging.price
+                        rsi_smarsi_cross = base_settings.averaging.rsi_smarsi_cross
+
+                    class _SettingsView:
+                        bot_id = base_settings.bot_id
+                        run_id = base_settings.run_id
+                        config_path = base_settings.config_path
+                        database_url = base_settings.database_url
+                        candles_ws_url = base_settings.candles_ws_url
+                        candles_ws_stale_after_seconds = base_settings.candles_ws_stale_after_seconds
+                        market_data_source = base_settings.market_data_source
+                        mock_speedup = base_settings.mock_speedup
+                        mock_seed = base_settings.mock_seed
+                        mock_start_price = base_settings.mock_start_price
+                        bot = base_settings.bot
+                        basic = base_settings.basic
+                        grid = base_settings.grid
+                        entry = base_settings.entry
+                        averaging = _AveragingView()
+                        exit = base_settings.exit
+                        indicators_tuning = base_settings.indicators_tuning
+                        timeframe_switching = base_settings.timeframe_switching
+                        secrets = base_settings.secrets
+                        position_mode = base_settings.position_mode
+                        symbol = base_settings.symbol
+                        working_timeframes = base_settings.working_timeframes
+
+                    recompute_all(_SettingsView(), store, signals, symbol=self._settings.symbol)
+                else:
+                    recompute_all(self._settings, store, signals, symbol=self._settings.symbol)
+
+                # Evaluate switching based on EMA-cross on global TF, gated by open position.
+                if self._settings.timeframe_switching.timeframe_switching and self._settings.timeframe_switching.ema_global_switch:
+                    decision = timeframe_switcher.tick_ema200_cross(
+                        store=store,
+                        symbol=self._settings.symbol,
+                        global_tf=self._settings.indicators_tuning.global_timeframe,
+                        has_position=bool(has_position_ref()),
+                    )
+                    if decision.changed:
+                        logger.info(
+                            "Timeframe switched (averaging)",
+                            extra={
+                                "bot_id": self._settings.bot_id,
+                                "symbol": self._settings.symbol,
+                                "active_tf": decision.active_tf,
+                                "reason": decision.reason,
+                                "detail": decision.detail,
+                            },
+                        )
+                        # push new tf into shared ref
+                        def _noop() -> None:
+                            return
+
+                        # active_averaging_tf_ref is a getter only; write via switcher state on next loop
+                        # we still want active_tf to be reflected, so read from switcher directly
+                        _noop()
             except Exception:
                 logger.exception("signals loop failed", extra={"bot_id": self._settings.bot_id})
             await asyncio.sleep(0.5)
 
-    async def _strategy_loop(self, *, run_id: str, price_feed: PriceFeed, signals: SignalStore) -> None:
+    async def _strategy_loop(
+        self,
+        *,
+        run_id: str,
+        price_feed: PriceFeed,
+        signals: SignalStore,
+        timeframe_switcher: TimeframeSwitcher,
+        set_active_averaging_tf,
+        set_has_position,
+    ) -> None:
         """Strategy + order reconcile loop.
 
         MVP: only maintains TP conditional reduceOnly order based on current position WA entry.
@@ -636,10 +754,17 @@ class BotRuntime:
                         position_mode=self._settings.position_mode,
                         position_side="SHORT",
                     )
-                    if (snap_long is not None and snap_long.qty.copy_abs() > 0) or (
+                    has_pos = (snap_long is not None and snap_long.qty.copy_abs() > 0) or (
                         snap_short is not None and snap_short.qty.copy_abs() > 0
-                    ):
+                    )
+                    set_has_position(bool(has_pos))
+                    if has_pos:
+                        set_active_averaging_tf(timeframe_switcher.active_tf)
                         sleep_s = float(self._settings.averaging.avg_timesleep)
+                    else:
+                        # reset to base when flat
+                        timeframe_switcher.reset_to_base()
+                        set_active_averaging_tf(timeframe_switcher.base_tf)
 
                 await asyncio.sleep(sleep_s)
         except asyncio.CancelledError:

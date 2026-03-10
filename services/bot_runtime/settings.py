@@ -11,6 +11,19 @@ import json
 from services.execution.models import ExchangeId, MarginMode, PositionMode
 
 
+def _parse_timeframes(raw: str) -> list[str]:
+    # Allow either a single timeframe (e.g. "5m") or a comma-separated chain (e.g. "5m, 15m, 1h, 4h").
+    tfs = [p.strip().lower() for p in str(raw).split(",")]
+    tfs = [tf for tf in tfs if tf]
+    if not tfs:
+        raise RuntimeError("Timeframes string is empty")
+    return tfs
+
+
+def _first_timeframe(raw: str) -> str:
+    return _parse_timeframes(raw)[0]
+
+
 def _env(name: str, *, required: bool = False, default: str | None = None) -> str | None:
     val = os.environ.get(name, default)
     if required and (val is None or val == ""):
@@ -265,7 +278,7 @@ class BotSettings:
         tfs.append("1m")
         tfs.append(self.entry.entry_timeframe)
         if self.averaging.enabled:
-            tfs.append(self.averaging.timeframe)
+            tfs.extend(_parse_timeframes(self.averaging.timeframe))
         tfs.append(self.exit.exit_timeframe)
         tfs.append(self.indicators_tuning.global_timeframe)
 

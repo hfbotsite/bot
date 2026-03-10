@@ -97,7 +97,7 @@
   },
   "averaging": {
     "enabled": true,
-    "timeframe": "1h",
+    "timeframe": "5m, 15m, 1h, 4h",
     "avg_timesleep": 15,
     "avg_preset": "STOCH_CCI",
     "stoch_cci": {
